@@ -204,8 +204,8 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
         
     ws_sum.views.sheetView[0].showGridLines = True
     
-    # Title Banner (Row 2 & 3)
-    ws_sum.merge_cells('B2:G2')
+    # Title Banner (Row 2 & 3) - Spanning B to J for full matrix alignment
+    ws_sum.merge_cells('B2:J2')
     cell_title = ws_sum['B2']
     cell_title.value = "PROMETEON TYRE GROUP - IT INFRASTRUCTURE SLA PERFORMANCE REPORT (2026)"
     cell_title.font = FONT_MAIN_TITLE
@@ -213,7 +213,7 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
     cell_title.alignment = Alignment(horizontal='center', vertical='center')
     ws_sum.row_dimensions[2].height = 32
     
-    ws_sum.merge_cells('B3:G3')
+    ws_sum.merge_cells('B3:J3')
     cell_sub = ws_sum['B3']
     cell_sub.value = f"Scope: BusinessLine = 'Infrastructure Services' | Severity = '1 - Molto alta' & '2 - Alta' | SLA Target: <= 4.0h | Total Analyzed: {total_source_count:,}"
     cell_sub.font = FONT_SUBTITLE
@@ -222,56 +222,188 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
     ws_sum.row_dimensions[3].height = 20
 
     # -------------------------------------------------------------------------
-    # Table 1: Manager's Exact Summary Table (Rows 5 to 10)
+    # 1. QUARTERLY PERFORMANCE COMPARISON MATRIX (Rows 5 to 12, Columns B to J)
     # -------------------------------------------------------------------------
-    headers_t1 = ['Metric', 'Count / Value', 'Ratio / Rate', 'Status']
-    for col_idx, h_text in enumerate(headers_t1, start=2):
-        c = ws_sum.cell(row=5, column=col_idx)
+    ws_sum.merge_cells('B5:J5')
+    sec1_banner = ws_sum['B5']
+    sec1_banner.value = "1. QUARTERLY SLA PERFORMANCE BREAKDOWN (Q1 - Q4 2026)"
+    sec1_banner.font = FONT_SEC_TITLE
+    sec1_banner.fill = FILL_SOFT_HEADER
+    sec1_banner.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws_sum.row_dimensions[5].height = 24
+    
+    # Quarter Group Headers (Row 6)
+    ws_sum.merge_cells('B6:B7')
+    c_met = ws_sum['B6']
+    c_met.value = "Quarterly Metric"
+    c_met.font = FONT_TBL_HEADER
+    c_met.fill = FILL_NAVY
+    c_met.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    c_met.border = CELL_BORDER
+    ws_sum['B7'].border = CELL_BORDER
+    
+    quarters = [
+        ('Q1', 'Q1 - 2026 (Jan - Mar)', 3, 4),
+        ('Q2', 'Q2 - 2026 (Apr - Jun)', 5, 6),
+        ('Q3', 'Q3 - 2026 (Jul - Sep)', 7, 8),
+        ('Q4', 'Q4 - 2026 (Oct - Dec)', 9, 10),
+    ]
+    
+    for q_code, q_label, c_cnt, c_rate in quarters:
+        col_cnt_let = get_column_letter(c_cnt)
+        col_rate_let = get_column_letter(c_rate)
+        ws_sum.merge_cells(f'{col_cnt_let}6:{col_rate_let}6')
+        
+        c_q = ws_sum[f'{col_cnt_let}6']
+        c_q.value = q_label
+        c_q.font = FONT_TBL_HEADER
+        c_q.fill = FILL_NAVY
+        c_q.alignment = Alignment(horizontal='center', vertical='center')
+        c_q.border = CELL_BORDER
+        ws_sum[f'{col_rate_let}6'].border = CELL_BORDER
+        
+        # Subheaders (Row 7)
+        c_sub1 = ws_sum.cell(row=7, column=c_cnt, value="Count")
+        c_sub1.font = FONT_TBL_HEADER
+        c_sub1.fill = FILL_SOFT_HEADER
+        c_sub1.alignment = Alignment(horizontal='center', vertical='center')
+        c_sub1.border = CELL_BORDER
+        
+        c_sub2 = ws_sum.cell(row=7, column=c_rate, value="Ratio / Rate")
+        c_sub2.font = FONT_TBL_HEADER
+        c_sub2.fill = FILL_SOFT_HEADER
+        c_sub2.alignment = Alignment(horizontal='center', vertical='center')
+        c_sub2.border = CELL_BORDER
+        
+    ws_sum.row_dimensions[6].height = 22
+    ws_sum.row_dimensions[7].height = 20
+
+    # Row 8: Total Critical Tickets (Sev 1 + Sev 2)
+    ws_sum['B8'] = "Total Critical Tickets (Sev 1 + Sev 2)"
+    for q_code, _, c_cnt, c_rate in quarters:
+        ws_sum.cell(row=8, column=c_cnt, value=f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AM$2:$AM${max_row}, "{q_code}")')
+        col_cnt_let = get_column_letter(c_cnt)
+        ws_sum.cell(row=8, column=c_rate, value=f'=IF({col_cnt_let}8>0, 1.0, "-")')
+
+    # Row 9: Closed Within 4 Hours (SLA Passed)
+    ws_sum['B9'] = "Closed Within 4 Hours (SLA Passed)"
+    for q_code, _, c_cnt, c_rate in quarters:
+        ws_sum.cell(row=9, column=c_cnt, value=f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AM$2:$AM${max_row}, "{q_code}", \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")')
+        col_cnt_let = get_column_letter(c_cnt)
+        ws_sum.cell(row=9, column=c_rate, value=f'=IF({col_cnt_let}8>0, {col_cnt_let}9/{col_cnt_let}8, "-")')
+
+    # Row 10: Exceeding 4 Hours / SLA Breach (Failed)
+    ws_sum['B10'] = "Exceeding 4 Hours / SLA Breach (Failed)"
+    for q_code, _, c_cnt, c_rate in quarters:
+        ws_sum.cell(row=10, column=c_cnt, value=f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AM$2:$AM${max_row}, "{q_code}", \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")')
+        col_cnt_let = get_column_letter(c_cnt)
+        ws_sum.cell(row=10, column=c_rate, value=f'=IF({col_cnt_let}8>0, {col_cnt_let}10/{col_cnt_let}8, "-")')
+
+    # Row 11: KPI Target
+    ws_sum['B11'] = "KPI Target"
+    for _, _, c_cnt, c_rate in quarters:
+        ws_sum.cell(row=11, column=c_cnt, value="-")
+        ws_sum.cell(row=11, column=c_rate, value=0.90)
+
+    # Row 12: Result
+    ws_sum['B12'] = "Quarterly Result"
+    for _, _, c_cnt, c_rate in quarters:
+        col_cnt_let = get_column_letter(c_cnt)
+        col_rate_let = get_column_letter(c_rate)
+        ws_sum.merge_cells(f'{col_cnt_let}12:{col_rate_let}12')
+        res_cell = ws_sum[f'{col_cnt_let}12']
+        res_cell.value = f'=IF({col_cnt_let}8=0, "NO DATA", IF({col_rate_let}9>={col_rate_let}11, "PASSED", "FAILED"))'
+        ws_sum[f'{col_rate_let}12'].border = CELL_BORDER
+
+    # Styling Table 1 (Quarterly Matrix)
+    for r in range(8, 13):
+        ws_sum.row_dimensions[r].height = 22
+        is_result = (r == 12)
+        is_total = (r == 8)
+        
+        for col_idx in range(2, 11):
+            cell = ws_sum.cell(row=r, column=col_idx)
+            cell.border = TOTAL_BORDER if is_total else CELL_BORDER
+            
+            if is_result:
+                cell.fill = FILL_HIGHLIGHT
+                cell.font = FONT_RESULT
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+            else:
+                cell.font = FONT_DATA_BOLD if is_total else FONT_DATA
+                if r % 2 == 1:
+                    cell.fill = FILL_ZEBRA
+                
+                if col_idx == 2:
+                    cell.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+                elif col_idx in [3, 5, 7, 9]:
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+                    if isinstance(cell.value, str) and cell.value.startswith('='):
+                        cell.number_format = '#,##0'
+                elif col_idx in [4, 6, 8, 10]:
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+                    if r in [8, 9, 10, 11] and cell.value != "-":
+                        cell.number_format = '0.0%'
+
+    # -------------------------------------------------------------------------
+    # 2. FULL YEAR 2026 CONSOLIDATED PERFORMANCE (Rows 15 to 21)
+    # -------------------------------------------------------------------------
+    ws_sum.merge_cells('B14:E14')
+    sec2_banner = ws_sum['B14']
+    sec2_banner.value = "2. FULL YEAR 2026 - CONSOLIDATED INFRASTRUCTURE SLA PERFORMANCE"
+    sec2_banner.font = FONT_SEC_TITLE
+    sec2_banner.fill = FILL_SOFT_HEADER
+    sec2_banner.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws_sum.row_dimensions[14].height = 24
+    
+    headers_t2 = ['Metric', 'Count / Value', 'Ratio / Rate', 'Status']
+    for col_idx, h_text in enumerate(headers_t2, start=2):
+        c = ws_sum.cell(row=15, column=col_idx)
         c.value = h_text
         c.font = FONT_TBL_HEADER
         c.fill = FILL_NAVY
         c.alignment = Alignment(horizontal='center' if col_idx > 2 else 'left', vertical='center')
         c.border = CELL_BORDER
-    ws_sum.row_dimensions[5].height = 26
+    ws_sum.row_dimensions[15].height = 24
     
-    # Row 6: Total Critical Tickets
-    ws_sum['B6'] = "Total Critical Tickets (Sev 1 + Sev 2)"
-    ws_sum['C6'] = f"=COUNTIF('Year-2026'!$AH$2:$AH${max_row}, TRUE)"
-    ws_sum['D6'] = 1.0
-    ws_sum['E6'] = "-"
+    # Row 16: Total Critical Tickets
+    ws_sum['B16'] = "Total Critical Tickets (Sev 1 + Sev 2)"
+    ws_sum['C16'] = f"=COUNTIF('Year-2026'!$AH$2:$AH${max_row}, TRUE)"
+    ws_sum['D16'] = 1.0
+    ws_sum['E16'] = "-"
     
-    # Row 7: Closed Within 4 Hours (SLA Passed)
-    ws_sum['B7'] = "Closed Within 4 Hours (SLA Passed)"
-    ws_sum['C7'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
-    ws_sum['D7'] = "=IF(C6>0, C7/C6, 0)"
-    ws_sum['E7'] = "-"
+    # Row 17: Closed Within 4 Hours (SLA Passed)
+    ws_sum['B17'] = "Closed Within 4 Hours (SLA Passed)"
+    ws_sum['C17'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
+    ws_sum['D17'] = "=IF(C16>0, C17/C16, 0)"
+    ws_sum['E17'] = "-"
     
-    # Row 8: Exceeding 4 Hours / SLA Breach (Failed)
-    ws_sum['B8'] = "Exceeding 4 Hours / SLA Breach (Failed)"
-    ws_sum['C8'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
-    ws_sum['D8'] = "=IF(C6>0, C8/C6, 0)"
-    ws_sum['E8'] = "-"
+    # Row 18: Exceeding 4 Hours / SLA Breach (Failed)
+    ws_sum['B18'] = "Exceeding 4 Hours / SLA Breach (Failed)"
+    ws_sum['C18'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
+    ws_sum['D18'] = "=IF(C16>0, C18/C16, 0)"
+    ws_sum['E18'] = "-"
     
-    # Row 9: KPI Target
-    ws_sum['B9'] = "KPI Target"
-    ws_sum['C9'] = "-"
-    ws_sum['D9'] = 0.90
-    ws_sum['E9'] = "-"
+    # Row 19: KPI Target
+    ws_sum['B19'] = "KPI Target"
+    ws_sum['C19'] = "-"
+    ws_sum['D19'] = 0.90
+    ws_sum['E19'] = "-"
     
-    # Row 10: Result
-    ws_sum['B10'] = "Result"
-    ws_sum['C10'] = "-"
-    ws_sum['D10'] = "-"
-    ws_sum['E10'] = '=IF(D7>=D9, "PASSED", "FAILED")'
+    # Row 20: Result
+    ws_sum['B20'] = "Result"
+    ws_sum['C20'] = "-"
+    ws_sum['D20'] = "-"
+    ws_sum['E20'] = '=IF(D17>=D19, "PASSED", "FAILED")'
     
-    # Format Table 1
-    for r in range(6, 11):
+    # Styling Table 2 (Consolidated Annual Table)
+    for r in range(16, 21):
         ws_sum.row_dimensions[r].height = 22
         for col_idx in range(2, 6):
             cell = ws_sum.cell(row=r, column=col_idx)
-            cell.font = FONT_DATA_BOLD if r in [6, 10] else FONT_DATA
+            cell.font = FONT_DATA_BOLD if r in [16, 20] else FONT_DATA
             cell.border = CELL_BORDER
-            if r == 10:
+            if r == 20:
                 cell.fill = FILL_HIGHLIGHT
                 if col_idx == 5:
                     cell.font = FONT_RESULT
@@ -286,53 +418,59 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
                     cell.number_format = '#,##0'
             elif col_idx == 4:
                 cell.alignment = Alignment(horizontal='center', vertical='center')
-                if r in [6, 7, 8, 9] and cell.value != "-":
+                if r in [16, 17, 18, 19] and cell.value != "-":
                     cell.number_format = '0.0%'
             elif col_idx == 5:
                 cell.alignment = Alignment(horizontal='center', vertical='center')
 
     # -------------------------------------------------------------------------
-    # Table 2: Domain Breakdown (Rows 13 to 17)
+    # 3. DOMAIN BREAKDOWN (Rows 23 to 27)
     # -------------------------------------------------------------------------
-    ws_sum.cell(row=12, column=2, value="1. DOMAIN & INFRASTRUCTURE CATEGORY BREAKDOWN").font = FONT_SEC_TITLE
+    ws_sum.merge_cells('B22:G22')
+    sec3_banner = ws_sum['B22']
+    sec3_banner.value = "3. DOMAIN & INFRASTRUCTURE CATEGORY BREAKDOWN"
+    sec3_banner.font = FONT_SEC_TITLE
+    sec3_banner.fill = FILL_SOFT_HEADER
+    sec3_banner.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws_sum.row_dimensions[22].height = 24
     
-    headers_t2 = ['Category', 'In-Scope Incidents', 'SLA Met (Passed)', 'SLA Breached (Failed)', 'SLA Compliance (%)', 'Avg Resolution (Hours)']
-    for col_idx, h_text in enumerate(headers_t2, start=2):
-        c = ws_sum.cell(row=13, column=col_idx)
+    headers_t3 = ['Category', 'In-Scope Incidents', 'SLA Met (Passed)', 'SLA Breached (Failed)', 'SLA Compliance (%)', 'Avg Resolution (Hours)']
+    for col_idx, h_text in enumerate(headers_t3, start=2):
+        c = ws_sum.cell(row=23, column=col_idx)
         c.value = h_text
         c.font = FONT_TBL_HEADER
-        c.fill = FILL_SOFT_HEADER
+        c.fill = FILL_NAVY
         c.alignment = Alignment(horizontal='center' if col_idx > 2 else 'left', vertical='center')
         c.border = CELL_BORDER
-    ws_sum.row_dimensions[13].height = 24
+    ws_sum.row_dimensions[23].height = 24
     
-    # Row 14: Network
-    ws_sum['B14'] = "Managed Network Services"
-    ws_sum['C14'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Network")'
-    ws_sum['D14'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Network", \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
-    ws_sum['E14'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Network", \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
-    ws_sum['F14'] = "=IF(C14>0, D14/C14, 0)"
-    ws_sum['G14'] = f'=AVERAGEIFS(\'Year-2026\'!$AI$2:$AI${max_row}, \'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Network")'
+    # Row 24: Network
+    ws_sum['B24'] = "Managed Network Services"
+    ws_sum['C24'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Network")'
+    ws_sum['D24'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Network", \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
+    ws_sum['E24'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Network", \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
+    ws_sum['F24'] = "=IF(C24>0, D24/C24, 0)"
+    ws_sum['G24'] = f'=AVERAGEIFS(\'Year-2026\'!$AI$2:$AI${max_row}, \'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Network")'
     
-    # Row 15: Industrial OT
-    ws_sum['B15'] = "Industrial OT & Plant Infrastructure"
-    ws_sum['C15'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Industrial OT")'
-    ws_sum['D15'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Industrial OT", \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
-    ws_sum['E15'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Industrial OT", \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
-    ws_sum['F15'] = "=IF(C15>0, D15/C15, 0)"
-    ws_sum['G15'] = f'=AVERAGEIFS(\'Year-2026\'!$AI$2:$AI${max_row}, \'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Industrial OT")'
+    # Row 25: Industrial OT
+    ws_sum['B25'] = "Industrial OT & Plant Infrastructure"
+    ws_sum['C25'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Industrial OT")'
+    ws_sum['D25'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Industrial OT", \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
+    ws_sum['E25'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Industrial OT", \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
+    ws_sum['F25'] = "=IF(C25>0, D25/C25, 0)"
+    ws_sum['G25'] = f'=AVERAGEIFS(\'Year-2026\'!$AI$2:$AI${max_row}, \'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$AK$2:$AK${max_row}, "Industrial OT")'
     
-    # Row 16: Total
-    ws_sum['B16'] = "Total In-Scope Infrastructure"
-    ws_sum['C16'] = "=SUM(C14:C15)"
-    ws_sum['D16'] = "=SUM(D14:D15)"
-    ws_sum['E16'] = "=SUM(E14:E15)"
-    ws_sum['F16'] = "=IF(C16>0, D16/C16, 0)"
-    ws_sum['G16'] = f'=AVERAGEIFS(\'Year-2026\'!$AI$2:$AI${max_row}, \'Year-2026\'!$AH$2:$AH${max_row}, TRUE)'
+    # Row 26: Total
+    ws_sum['B26'] = "Total In-Scope Infrastructure"
+    ws_sum['C26'] = "=SUM(C24:C25)"
+    ws_sum['D26'] = "=SUM(D24:D25)"
+    ws_sum['E26'] = "=SUM(E24:E25)"
+    ws_sum['F26'] = "=IF(C26>0, D26/C26, 0)"
+    ws_sum['G26'] = f'=AVERAGEIFS(\'Year-2026\'!$AI$2:$AI${max_row}, \'Year-2026\'!$AH$2:$AH${max_row}, TRUE)'
     
-    for r in range(14, 17):
+    for r in range(24, 27):
         ws_sum.row_dimensions[r].height = 20
-        is_tot = (r == 16)
+        is_tot = (r == 26)
         for col_idx in range(2, 8):
             cell = ws_sum.cell(row=r, column=col_idx)
             cell.font = FONT_DATA_BOLD if is_tot else FONT_DATA
@@ -355,44 +493,50 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
                 cell.number_format = '0.00'
 
     # -------------------------------------------------------------------------
-    # Table 3: Severity Breakdown (Rows 19 to 23)
+    # 4. SEVERITY BREAKDOWN (Rows 29 to 33)
     # -------------------------------------------------------------------------
-    ws_sum.cell(row=18, column=2, value="2. BREAKDOWN BY SEVERITY LEVEL").font = FONT_SEC_TITLE
+    ws_sum.merge_cells('B28:F28')
+    sec4_banner = ws_sum['B28']
+    sec4_banner.value = "4. BREAKDOWN BY SEVERITY LEVEL"
+    sec4_banner.font = FONT_SEC_TITLE
+    sec4_banner.fill = FILL_SOFT_HEADER
+    sec4_banner.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws_sum.row_dimensions[28].height = 24
     
-    headers_t3 = ['Severity Level', 'In-Scope Incidents', 'SLA Met (Passed)', 'SLA Breached (Failed)', 'SLA Compliance (%)']
-    for col_idx, h_text in enumerate(headers_t3, start=2):
-        c = ws_sum.cell(row=19, column=col_idx)
+    headers_t4 = ['Severity Level', 'In-Scope Incidents', 'SLA Met (Passed)', 'SLA Breached (Failed)', 'SLA Compliance (%)']
+    for col_idx, h_text in enumerate(headers_t4, start=2):
+        c = ws_sum.cell(row=29, column=col_idx)
         c.value = h_text
         c.font = FONT_TBL_HEADER
-        c.fill = FILL_SOFT_HEADER
+        c.fill = FILL_NAVY
         c.alignment = Alignment(horizontal='center' if col_idx > 2 else 'left', vertical='center')
         c.border = CELL_BORDER
-    ws_sum.row_dimensions[19].height = 24
+    ws_sum.row_dimensions[29].height = 24
     
-    # Row 20: Severity 1
-    ws_sum['B20'] = "Severity 1 - Molto alta (Critical)"
-    ws_sum['C20'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "1 - Molto alta")'
-    ws_sum['D20'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "1 - Molto alta", \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
-    ws_sum['E20'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "1 - Molto alta", \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
-    ws_sum['F20'] = "=IF(C20>0, D20/C20, 0)"
+    # Row 30: Severity 1
+    ws_sum['B30'] = "Severity 1 - Molto alta (Critical)"
+    ws_sum['C30'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "1 - Molto alta")'
+    ws_sum['D30'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "1 - Molto alta", \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
+    ws_sum['E30'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "1 - Molto alta", \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
+    ws_sum['F30'] = "=IF(C30>0, D30/C30, 0)"
     
-    # Row 21: Severity 2
-    ws_sum['B21'] = "Severity 2 - Alta (High)"
-    ws_sum['C21'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "2 - Alta")'
-    ws_sum['D21'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "2 - Alta", \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
-    ws_sum['E21'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "2 - Alta", \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
-    ws_sum['F21'] = "=IF(C21>0, D21/C21, 0)"
+    # Row 31: Severity 2
+    ws_sum['B31'] = "Severity 2 - Alta (High)"
+    ws_sum['C31'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "2 - Alta")'
+    ws_sum['D31'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "2 - Alta", \'Year-2026\'!$AJ$2:$AJ${max_row}, "PASSED")'
+    ws_sum['E31'] = f'=COUNTIFS(\'Year-2026\'!$AH$2:$AH${max_row}, TRUE, \'Year-2026\'!$I$2:$I${max_row}, "2 - Alta", \'Year-2026\'!$AJ$2:$AJ${max_row}, "FAILED")'
+    ws_sum['F31'] = "=IF(C31>0, D31/C31, 0)"
     
-    # Row 22: Total
-    ws_sum['B22'] = "Total Severity 1 & 2"
-    ws_sum['C22'] = "=SUM(C20:C21)"
-    ws_sum['D22'] = "=SUM(D20:D21)"
-    ws_sum['E22'] = "=SUM(E20:E21)"
-    ws_sum['F22'] = "=IF(C22>0, D22/C22, 0)"
+    # Row 32: Total
+    ws_sum['B32'] = "Total Severity 1 & 2"
+    ws_sum['C32'] = "=SUM(C30:C31)"
+    ws_sum['D32'] = "=SUM(D30:D31)"
+    ws_sum['E32'] = "=SUM(E30:E31)"
+    ws_sum['F32'] = "=IF(C32>0, D32/C32, 0)"
     
-    for r in range(20, 23):
+    for r in range(30, 33):
         ws_sum.row_dimensions[r].height = 20
-        is_tot = (r == 22)
+        is_tot = (r == 32)
         for col_idx in range(2, 7):
             cell = ws_sum.cell(row=r, column=col_idx)
             cell.font = FONT_DATA_BOLD if is_tot else FONT_DATA
@@ -412,21 +556,27 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
                 cell.number_format = '0.0%'
 
     # -------------------------------------------------------------------------
-    # Table 4: Plant Breakdown (Rows 25 to 32)
+    # 5. PLANT BREAKDOWN (Rows 35 to 42)
     # -------------------------------------------------------------------------
-    ws_sum.cell(row=24, column=2, value="3. BREAKDOWN BY MANUFACTURING PLANT & LOCATION").font = FONT_SEC_TITLE
+    ws_sum.merge_cells('B34:F34')
+    sec5_banner = ws_sum['B34']
+    sec5_banner.value = "5. BREAKDOWN BY MANUFACTURING PLANT & LOCATION"
+    sec5_banner.font = FONT_SEC_TITLE
+    sec5_banner.fill = FILL_SOFT_HEADER
+    sec5_banner.alignment = Alignment(horizontal='left', vertical='center', indent=1)
+    ws_sum.row_dimensions[34].height = 24
     
-    headers_t4 = ['Manufacturing Plant / Site', 'In-Scope Incidents', 'SLA Met (Passed)', 'SLA Breached (Failed)', 'SLA Compliance (%)']
-    for col_idx, h_text in enumerate(headers_t4, start=2):
-        c = ws_sum.cell(row=25, column=col_idx)
+    headers_t5 = ['Manufacturing Plant / Site', 'In-Scope Incidents', 'SLA Met (Passed)', 'SLA Breached (Failed)', 'SLA Compliance (%)']
+    for col_idx, h_text in enumerate(headers_t5, start=2):
+        c = ws_sum.cell(row=35, column=col_idx)
         c.value = h_text
         c.font = FONT_TBL_HEADER
-        c.fill = FILL_SOFT_HEADER
+        c.fill = FILL_NAVY
         c.alignment = Alignment(horizontal='center' if col_idx > 2 else 'left', vertical='center')
         c.border = CELL_BORDER
-    ws_sum.row_dimensions[25].height = 24
+    ws_sum.row_dimensions[35].height = 24
     
-    start_r = 26
+    start_r = 36
     for idx, (p_label, p_code) in enumerate(PLANT_MAPPINGS):
         curr_r = start_r + idx
         ws_sum.cell(row=curr_r, column=2, value=p_label)
@@ -463,14 +613,17 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
                 cell.alignment = Alignment(horizontal='center', vertical='center')
                 cell.number_format = '0.0%'
 
-    # Set Column Widths for Summary
+    # Set Column Widths for Summary (Columns A through J)
     ws_sum.column_dimensions['A'].width = 4
     ws_sum.column_dimensions['B'].width = 44
-    ws_sum.column_dimensions['C'].width = 22
-    ws_sum.column_dimensions['D'].width = 22
-    ws_sum.column_dimensions['E'].width = 22
-    ws_sum.column_dimensions['F'].width = 22
-    ws_sum.column_dimensions['G'].width = 22
+    ws_sum.column_dimensions['C'].width = 16
+    ws_sum.column_dimensions['D'].width = 16
+    ws_sum.column_dimensions['E'].width = 16
+    ws_sum.column_dimensions['F'].width = 16
+    ws_sum.column_dimensions['G'].width = 16
+    ws_sum.column_dimensions['H'].width = 16
+    ws_sum.column_dimensions['I'].width = 16
+    ws_sum.column_dimensions['J'].width = 16
     while True:
         try:
             ensure_file_writable(output_path)

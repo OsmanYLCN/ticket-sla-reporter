@@ -34,6 +34,14 @@ In accordance with Prometeon IT Infrastructure SLA policy, tickets are evaluated
 - **Calculation:** `Resolution_Hours = (Data Soluzione - Data Creazione) * 24`
 - **SLA Target Compliance:** Minimum 90.0% of In-Scope critical incidents resolved within 4.0 hours.
 
+### 4. Generated Workbook Structure
+- **`Summary` Dashboard Sheet:**
+  1. **Quarterly SLA Performance Matrix (Q1 - Q4):** Side-by-side comparison matrix displaying ticket volume, resolution within 4.0h, SLA breaches, and compliance results across each quarter.
+  2. **Full Year 2026 Consolidated Table:** Executive summary consolidating annual infrastructure SLA performance using live Excel formulas.
+  3. **Granular Breakdown Tables:** Domain breakdown (Managed Network vs. Industrial OT), severity distribution (Severity 1 vs. 2), and manufacturing plant breakdown (Kocaeli, Alexandria, Santo André, Gravataí, Other Sites).
+- **`Year-2026` Master Dataset Sheet:**
+  - Consolidates all quarterly records into a single auditable sheet with injected formula columns: `In_Scope` (Col AH), `Resolution_Hours` (Col AI), `SLA_Status` (Col AJ), `Scope_Category` (Col AK), `Plant_Site` (Col AL), and `Quarter` (Col AM).
+
 ---
 
 ## Repository Structure
