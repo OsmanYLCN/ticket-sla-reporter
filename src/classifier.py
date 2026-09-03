@@ -39,7 +39,7 @@ def get_plant_location(row_dict):
 
 def classify_ticket(row_dict):
     """
-    Classifies a ticket according to Prometeon SLA rules.
+    Classifies a ticket according to IT Infrastructure SLA rules.
     Returns: (in_scope: bool, scope_category: str)
     """
     bl = str(row_dict.get('BusinessLine', '') or '').strip()

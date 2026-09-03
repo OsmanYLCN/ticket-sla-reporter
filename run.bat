@@ -1,6 +1,6 @@
 @echo off
 setlocal
-title Prometeon SLA Reporter
+title IT Infrastructure SLA Reporter
 
 cd /d "%~dp0"
 

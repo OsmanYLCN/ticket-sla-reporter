@@ -1,24 +1,12 @@
-# Prometeon IT Infrastructure - Ticket SLA Reporting & Quarterly Consolidation Engine
+# IT Infrastructure - Ticket SLA Reporting & Quarterly Consolidation Engine
 
-Automated data pipeline and analytics engine designed for Prometeon IT Infrastructure management. The system consolidates quarterly incident records (`Tickets-Q1` through `Tickets-Q4`), applies multi-layered scope filtering and IT service classification rules, and generates an executive `Summary` dashboard driven entirely by dynamic Excel formulas.
-
----
-
-## Overview
-
-Corporate IT incident management requires precise tracking of Service Level Agreements (SLAs) for critical infrastructure. This utility provides an automated, auditable, and non-destructive workflow to process raw ticket exports:
-
-- Ingests quarterly data sources in read-only mode to guarantee raw data integrity.
-- Consolidates quarterly records into a unified `Year-2026` master repository.
-- Performs domain-specific scope classification across Network, Industrial Operations Technology (OT), and Enterprise Application boundaries.
-- Produces an executive `Summary` dashboard with live Excel formulas (`COUNTIF`, `COUNTIFS`, `AVERAGEIFS`, `IF`), ensuring total auditability without hardcoded metrics.
-- Prevents file corruption and operating system file-lock conflicts via proactive process monitoring.
+Automated data pipeline and analytics engine designed for IT Infrastructure management. The system consolidates quarterly incident records (`Tickets-Q1` through `Tickets-Q4`), applies multi-layered scope filtering and IT service classification rules, and generates an executive `Summary` dashboard driven entirely by dynamic Excel formulas.
 
 ---
 
 ## Governance & Scope Rules
 
-In accordance with Prometeon IT Infrastructure SLA policy, tickets are evaluated against the following criteria:
+In accordance with IT Infrastructure SLA policy, tickets are evaluated against the following criteria:
 
 ### 1. Mandatory Baseline Criteria
 - **Business Line:** Must strictly equal `Infrastructure Services`. Tickets originating from Workplace Services, Elmec Connect, or unrelated business units are excluded.
@@ -117,7 +105,7 @@ python generate_sla_summary.py
 The interface scans `sample_data/`, displays available `.xlsx` files ordered by modification timestamp (newest first), and prompts for selection:
 ```text
 ===========================================================================
-  PROMETEON IT INFRASTRUCTURE - SLA SUMMARY & QUARTERLY REPORT GENERATOR
+  IT INFRASTRUCTURE - SLA SUMMARY & QUARTERLY REPORT GENERATOR
 ===========================================================================
 
 [?] Available Excel Files in 'sample_data/' (Ordered by Date):

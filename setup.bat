@@ -1,9 +1,9 @@
 @echo off
 setlocal
-title Prometeon SLA Reporter - Kurulum
+title IT Infrastructure SLA Reporter - Kurulum
 
 echo ===========================================================================
-echo   PROMETEON IT INFRASTRUCTURE - SLA SUMMARY REPORTER KURULUMU
+echo   IT INFRASTRUCTURE - SLA SUMMARY REPORTER KURULUMU
 echo ===========================================================================
 echo.
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Prometeon IT Infrastructure SLA Summary & Quarterly Consolidation Tool
-======================================================================
+IT Infrastructure SLA Summary & Quarterly Consolidation Tool
+============================================================
 Consolidates quarterly ticket export sheets (Q1-Q4) into a 'Year-2026' sheet,
 applies strict SLA and Scope categorization rules, and generates an executive
 Summary dashboard with dynamic Excel formulas.
@@ -86,7 +86,7 @@ class UI:
 
 def print_banner():
     """Prints a corporate header banner."""
-    title = "PROMETEON IT INFRASTRUCTURE - SLA REPORTING & CONSOLIDATION ENGINE"
+    title = "IT INFRASTRUCTURE - SLA REPORTING & CONSOLIDATION ENGINE"
     print("\n" + f"{UI.CYAN}{UI.BOLD}╔" + "═" * 75 + "╗")
     print(f"║  {title:<73}║")
     print("╚" + "═" * 75 + f"╝{UI.RESET}\n")
@@ -269,7 +269,7 @@ def print_completion_card(input_path, output_path, total_records, stats, elapsed
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Prometeon IT Infrastructure - Ticket SLA Summary Reporter",
+        description="IT Infrastructure - Ticket SLA Summary Reporter",
         formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument(

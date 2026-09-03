@@ -207,7 +207,7 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
     # Title Banner (Row 2 & 3) - Spanning B to J for full matrix alignment
     ws_sum.merge_cells('B2:J2')
     cell_title = ws_sum['B2']
-    cell_title.value = "PROMETEON TYRE GROUP - IT INFRASTRUCTURE SLA PERFORMANCE REPORT (2026)"
+    cell_title.value = "IT INFRASTRUCTURE - SLA PERFORMANCE REPORT (2026)"
     cell_title.font = FONT_MAIN_TITLE
     cell_title.fill = FILL_NAVY
     cell_title.alignment = Alignment(horizontal='center', vertical='center')
