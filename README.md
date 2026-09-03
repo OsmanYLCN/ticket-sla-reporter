@@ -51,6 +51,8 @@ ticket-sla-reporter/
 |   |-- processor.py        # Streamlined workbook ingestion and datetime normalization
 |   +-- excel_builder.py    # Master workbook consolidation, layout, and formula injection
 |-- generate_sla_summary.py # Primary command-line interface with interactive menu
+|-- setup.bat               # Windows one-click automated setup and dependency installer
+|-- run.bat                 # Windows one-click launcher with drag-and-drop support
 |-- requirements.txt        # Python dependency manifest
 |-- .gitignore              # Git exclusion rules for Python, virtual environments, and data
 +-- README.md               # Technical documentation
@@ -58,7 +60,15 @@ ticket-sla-reporter/
 
 ---
 
-## Prerequisites & Installation
+## Quick Start for Windows (Recommended)
+
+1. Double-click **`setup.bat`**: Automatically checks for Python, provisions an isolated virtual environment (`.venv`), and installs required dependencies.
+2. Place raw quarterly Excel files into `sample_data/`.
+3. Double-click **`run.bat`** (or drag and drop any Excel file directly onto `run.bat`).
+
+---
+
+## Manual Prerequisites & Installation
 
 ### Environment Requirements
 - Python 3.9 or higher
@@ -70,7 +80,7 @@ ticket-sla-reporter/
    git clone <repository_url>
    cd ticket-sla-reporter
    ```
-2. Create and activate an isolated virtual environment (recommended):
+2. Create and activate an isolated virtual environment:
    ```bash
    python -m venv .venv
    # Windows (PowerShell)

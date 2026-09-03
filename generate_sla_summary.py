@@ -74,7 +74,12 @@ def select_input_file_interactive():
     print(f"    (Q) Çıkış (Quit)")
     
     while True:
-        choice = input(f"\nLütfen işlenecek dosyayı seçin [1-{len(files)}, M, Q veya Enter: (1)]: ").strip()
+        try:
+            choice = input(f"\nLütfen işlenecek dosyayı seçin [1-{len(files)}, M, Q veya Enter: (1)]: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[*] Programdan güvenli şekilde çıkış yapıldı.\n")
+            sys.exit(0)
+            
         if choice.upper() == "Q":
             print("\n[*] Programdan güvenli şekilde çıkış yapıldı.\n")
             sys.exit(0)
@@ -83,7 +88,11 @@ def select_input_file_interactive():
             print(f"    -> Seçilen: ({1}) {files[0][0]}")
             return selected
         if choice.upper() == "M":
-            manual = input("    Lütfen Excel dosya yolunu giriniz [veya 'Q' ile iptal]: ").strip()
+            try:
+                manual = input("    Lütfen Excel dosya yolunu giriniz [veya 'Q' ile iptal]: ").strip()
+            except (EOFError, KeyboardInterrupt):
+                print("\n[*] Programdan güvenli şekilde çıkış yapıldı.\n")
+                sys.exit(0)
             if manual.upper() == "Q":
                 print("\n[*] Programdan güvenli şekilde çıkış yapıldı.\n")
                 sys.exit(0)
@@ -116,7 +125,10 @@ def select_output_file_interactive(input_path):
     default_out = get_default_output_path(input_path)
     print(f"\n[?] Çıktı Rapor Dosyası Konumu:")
     print(f"    Varsayılan Hedef: {default_out}")
-    user_out = input(f"    Farklı bir çıktı yolu girmek için yazın, onaylamak için [Enter], çıkmak için [Q]: ").strip()
+    try:
+        user_out = input(f"    Farklı bir çıktı yolu girmek için yazın, onaylamak için [Enter], çıkmak için [Q]: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return default_out
     if user_out.upper() == "Q":
         print("\n[*] Programdan güvenli şekilde çıkış yapıldı.\n")
         sys.exit(0)
@@ -229,6 +241,16 @@ def main():
     print(f"  * 'Year-2026' Satır Sayısı         : {max_row:,}")
     print(f"  * İşlem Süresi                     : {elapsed:.2f} saniye")
     print("="*75 + "\n")
+
+    # Prompt to open report in Microsoft Excel (Windows only)
+    if sys.platform == 'win32' and not args.non_interactive and sys.stdin.isatty():
+        try:
+            open_resp = input("  Rapor dosyasını Excel ile açmak ister misiniz? [E/H, Varsayılan: E]: ").strip().upper()
+            if open_resp in ['', 'E', 'EVET', 'Y', 'YES']:
+                print("  -> Excel başlatılıyor...\n")
+                os.startfile(os.path.abspath(output_path))
+        except Exception:
+            pass
 
 
 if __name__ == '__main__':
