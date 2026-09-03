@@ -40,7 +40,7 @@ def load_and_consolidate_tickets(file_path):
     
     header_cols = None
     all_records = []
-    quarterly_counts = {}
+    quarterly_counts = {q: 0 for q in quarter_sheets}
     
     for q_name in quarter_sheets:
         if q_name not in wb.sheetnames:

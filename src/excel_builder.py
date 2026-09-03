@@ -114,18 +114,37 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
     date_col_indices = [3, 10, 11]  # Col C (Creation), Col J (Solution), Col K (Closure)
     
     in_scope_count = 0
+    net_count = 0
+    ot_count = 0
+    passed_count = 0
+    failed_count = 0
+    
     for idx, rec in enumerate(all_records, start=2):
         in_scope, category = classify_ticket(rec)
         plant_site = get_plant_location(rec)
-        if in_scope:
-            in_scope_count += 1
-            
+        
         row_values = []
         for c_idx, h in enumerate(header_cols, start=1):
             val = rec.get(h)
             if c_idx in date_col_indices:
                 val = parse_datetime_value(val)
             row_values.append(val)
+            
+        if in_scope:
+            in_scope_count += 1
+            if category == 'Network':
+                net_count += 1
+            elif category == 'Industrial OT':
+                ot_count += 1
+                
+            c_val = row_values[2]  # Col C (Creation)
+            s_val = row_values[9]  # Col J (Solution)
+            if isinstance(c_val, datetime) and isinstance(s_val, datetime):
+                diff_hours = (s_val - c_val).total_seconds() / 3600.0
+                if diff_hours <= 4.0:
+                    passed_count += 1
+                else:
+                    failed_count += 1
             
         # Helper Columns:
         # Col 34 (AH): In_Scope
@@ -461,4 +480,12 @@ def build_sla_report_workbook(all_records, header_cols, input_path, output_path,
         except (PermissionError, OSError):
             ensure_file_writable(output_path)
             
-    return in_scope_count, max_row
+    stats = {
+        'in_scope_count': in_scope_count,
+        'max_row': max_row,
+        'net_count': net_count,
+        'ot_count': ot_count,
+        'passed_count': passed_count,
+        'failed_count': failed_count
+    }
+    return stats
